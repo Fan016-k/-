@@ -1,0 +1,58 @@
+{
+  "user_tags": {
+    "user1": [
+      "acg"
+    ],
+    "user2": [],
+    "user3": [],
+    "user4": [],
+    "user5": [],
+    "user123": [
+      "摇滚爱好者",
+      "音乐发烧友"
+    ],
+    "user6": [
+      "交响乐",
+      "摇滚"
+    ],
+    "user7": [
+      "万能青年旅店",
+      "pink floyd",
+      "The Verve",
+      "Beatles",
+      "ac/dc"
+    ]
+  },
+  "tag_users": {
+    "acg": [
+      "user1"
+    ],
+    "音乐发烧友": [
+      "user123"
+    ],
+    "摇滚爱好者": [
+      "user123"
+    ],
+    "交响乐": [
+      "user6"
+    ],
+    "摇滚": [
+      "user6"
+    ],
+    "pink floyd": [
+      "user7"
+    ],
+    "ac/dc": [
+      "user7"
+    ],
+    "The Verve": [
+      "user7"
+    ],
+    "Beatles": [
+      "user7"
+    ],
+    "万能青年旅店": [
+      "user7"
+    ]
+  }
+}

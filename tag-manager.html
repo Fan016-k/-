@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网易云音乐用户标签管理系统</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        header {
+            background: linear-gradient(135deg, #C13584, #833AB4, #405DE6);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            flex: 1 1 300px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #444;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4A76FD;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #3a5eca;
+        }
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+            min-height: 30px;
+        }
+        .tag {
+            background-color: #E1ECF4;
+            color: #39739D;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .tag button {
+            background: none;
+            color: #777;
+            border: none;
+            padding: 0 0 0 5px;
+            margin: 0;
+            width: auto;
+        }
+        .tag button:hover {
+            color: #C13584;
+        }
+        .api-response {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .user-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .user-list li {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .user-list li:hover {
+            background-color: #f0f0f0;
+        }
+        .tag-input-container {
+            display: flex;
+            gap: 8px;
+        }
+        .tag-input-container button {
+            width: auto;
+        }
+        #tagInput {
+            flex-grow: 1;
+        }
+        .status-message {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .empty-message {
+            color: #666;
+            font-style: italic;
+            padding: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #777;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>网易云音乐用户标签管理系统</h1>
+        <p>管理用户画像标签，支持用户创建、标签添加和查询</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>创建用户</h2>
+            <input type="text" id="newUserId" placeholder="请输入新用户ID">
+            <button id="createUser">创建没有标签的用户</button>
+            <div id="createUserStatus"></div>
+        </div>
+
+        <div class="card">
+            <h2>添加标签</h2>
+            <input type="text" id="userId" placeholder="请输入用户ID">
+            
+            <div class="tag-input-container">
+                <input type="text" id="tagInput" placeholder="输入要添加的标签">
+                <button id="addTagToList">+</button>
+            </div>
+            
+            <div class="tag-container" id="tagList"></div>
+            <button id="saveUserTags">保存标签</button>
+            <div id="addTagStatus"></div>
+        </div>
+
+        <div class="card">
+            <h2>获取用户标签</h2>
+            <input type="text" id="searchUserId" placeholder="请输入用户ID">
+            <button id="getUserTags">查询</button>
+            
+            <h3>用户标签：</h3>
+            <div class="tag-container" id="userTagResults"></div>
+            
+            <h3>API响应：</h3>
+            <div id="apiResponse" class="api-response"></div>
+        </div>
+
+        <div class="card">
+            <h2>按标签查找用户</h2>
+            <input type="text" id="searchTag" placeholder="请输入标签名称">
+            <button id="findUsersByTag">查找</button>
+            
+            <h3>拥有该标签的用户：</h3>
+            <ul class="user-list" id="usersByTagResults"></ul>
+            <div id="findUsersStatus"></div>
+        </div>
+
+        <div class="card">
+            <h2>删除标签</h2>
+            <input type="text" id="removeUserId" placeholder="用户ID">
+            <input type="text" id="removeTag" placeholder="要删除的标签">
+            <button id="removeUserTag">删除</button>
+            <div id="removeTagStatus"></div>
+        </div>
+
+        <div class="card">
+            <h2>系统信息</h2>
+            <button id="getAllUsers">获取所有用户</button>
+            <h3>系统中的用户：</h3>
+            <ul class="user-list" id="allUsersList"></ul>
+            
+            <button id="getAllTags" style="margin-top: 15px;">获取所有标签</button>
+            <h3>系统中的标签：</h3>
+            <div class="tag-container" id="allTagsList"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        网易云音乐用户标签服务 &copy; 2025
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // API基础URL
+            const API_URL = 'http://localhost:8000';
+            
+            // 当前标签列表（用于添加标签）
+            let currentTags = [];
+            
+            // 获取所有DOM元素
+            const elements = {
+                // 创建用户
+                newUserId: document.getElementById('newUserId'),
+                createUserBtn: document.getElementById('createUser'),
+                createUserStatus: document.getElementById('createUserStatus'),
+                
+                // 添加标签
+                userId: document.getElementById('userId'),
+                tagInput: document.getElementById('tagInput'),
+                tagList: document.getElementById('tagList'),
+                addTagBtn: document.getElementById('addTagToList'),
+                saveTagsBtn: document.getElementById('saveUserTags'),
+                addTagStatus: document.getElementById('addTagStatus'),
+                
+                // 获取用户标签
+                searchUserId: document.getElementById('searchUserId'),
+                getUserTagsBtn: document.getElementById('getUserTags'),
+                userTagResults: document.getElementById('userTagResults'),
+                apiResponse: document.getElementById('apiResponse'),
+                
+                // 按标签查找用户
+                searchTag: document.getElementById('searchTag'),
+                findUsersBtn: document.getElementById('findUsersByTag'),
+                usersByTagResults: document.getElementById('usersByTagResults'),
+                findUsersStatus: document.getElementById('findUsersStatus'),
+                
+                // 删除标签
+                removeUserId: document.getElementById('removeUserId'),
+                removeTag: document.getElementById('removeTag'),
+                removeTagBtn: document.getElementById('removeUserTag'),
+                removeTagStatus: document.getElementById('removeTagStatus'),
+                
+                // 系统信息
+                getAllUsersBtn: document.getElementById('getAllUsers'),
+                allUsersList: document.getElementById('allUsersList'),
+                getAllTagsBtn: document.getElementById('getAllTags'),
+                allTagsList: document.getElementById('allTagsList')
+            };
+            
+            // 显示状态消息
+            function showStatus(element, message, isSuccess) {
+                element.textContent = message;
+                element.className = 'status-message ' + (isSuccess ? 'success' : 'error');
+                
+                // 3秒后清除消息
+                setTimeout(() => {
+                    element.textContent = '';
+                    element.className = '';
+                }, 3000);
+            }
+            
+            // 渲染标签列表
+            function renderTags() {
+                elements.tagList.innerHTML = '';
+                
+                if (currentTags.length === 0) {
+                    return;
+                }
+                
+                currentTags.forEach(tag => {
+                    const tagEl = document.createElement('div');
+                    tagEl.className = 'tag';
+                    tagEl.innerHTML = `${tag}<button data-tag="${tag}">×</button>`;
+                    elements.tagList.appendChild(tagEl);
+                });
+                
+                // 为标签删除按钮添加事件监听器
+                elements.tagList.querySelectorAll('.tag button').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const tagToRemove = this.getAttribute('data-tag');
+                        currentTags = currentTags.filter(tag => tag !== tagToRemove);
+                        renderTags();
+                    });
+                });
+            }
+            
+            // 处理API错误
+            function handleApiError(response) {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.detail || data.message || '请求失败');
+                    });
+                }
+                return response.json();
+            }
+            
+            // 创建用户（无标签）
+            elements.createUserBtn.addEventListener('click', function() {
+                const userId = elements.newUserId.value.trim();
+                
+                if (!userId) {
+                    showStatus(elements.createUserStatus, '请输入用户ID', false);
+                    return;
+                }
+                
+                // 使用新的创建用户端点
+                fetch(`${API_URL}/users/${userId}`, {
+                    method: 'POST'
+                })
+                .then(handleApiError)
+                .then(data => {
+                    showStatus(elements.createUserStatus, data.message, true);
+                    elements.newUserId.value = '';
+                    
+                    // 自动在获取标签部分填入用户ID并触发查询
+                    elements.searchUserId.value = userId;
+                    elements.getUserTagsBtn.click();
+                })
+                .catch(error => {
+                    showStatus(elements.createUserStatus, '错误: ' + error.message, false);
+                });
+            });
+            
+            // 在标签列表中添加标签
+            elements.addTagBtn.addEventListener('click', function() {
+                const tag = elements.tagInput.value.trim();
+                
+                if (!tag) {
+                    return;
+                }
+                
+                if (!currentTags.includes(tag)) {
+                    currentTags.push(tag);
+                    elements.tagInput.value = '';
+                    renderTags();
+                }
+            });
+            
+            // 按Enter键添加标签
+            elements.tagInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    elements.addTagBtn.click();
+                }
+            });
+            
+            // 保存用户标签
+            elements.saveTagsBtn.addEventListener('click', function() {
+                const userId = elements.userId.value.trim();
+                
+                if (!userId) {
+                    showStatus(elements.addTagStatus, '请输入用户ID', false);
+                    return;
+                }
+                
+                // 发送请求保存标签
+                fetch(`${API_URL}/users/${userId}/tags`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ tags: currentTags })
+                })
+                .then(handleApiError)
+                .then(data => {
+                    showStatus(elements.addTagStatus, data.message, true);
+                    currentTags = [];
+                    renderTags();
+                    elements.userId.value = '';
+                    
+                    // 自动更新用户标签显示
+                    if (elements.searchUserId.value === userId) {
+                        elements.getUserTagsBtn.click();
+                    }
+                })
+                .catch(error => {
+                    showStatus(elements.addTagStatus, '错误: ' + error.message, false);
+                });
+            });
+            
+            // 获取用户标签
+            elements.getUserTagsBtn.addEventListener('click', function() {
+                const userId = elements.searchUserId.value.trim();
+                
+                if (!userId) {
+                    showStatus(elements.apiResponse, '请输入用户ID', false);
+                    return;
+                }
+                
+                fetch(`${API_URL}/users/${userId}/tags`)
+                .then(response => response.json())
+                .then(data => {
+                    // 显示API响应
+                    elements.apiResponse.textContent = JSON.stringify(data, null, 2);
+                    
+                    // 清空标签结果容器
+                    elements.userTagResults.innerHTML = '';
+                    
+                    // 处理成功响应
+                    if (data.status === "成功") {
+                        // 检查用户是否有标签
+                        if (data.data && data.data.tags && data.data.tags.length > 0) {
+                            // 显示每个标签
+                            data.data.tags.forEach(tag => {
+                                const tagEl = document.createElement('div');
+                                tagEl.className = 'tag';
+                                tagEl.textContent = tag;
+                                elements.userTagResults.appendChild(tagEl);
+                            });
+                        } else {
+                            // 用户存在但没有标签
+                            const emptyMsg = document.createElement('div');
+                            emptyMsg.className = 'empty-message';
+                            emptyMsg.textContent = '此用户没有标签';
+                            elements.userTagResults.appendChild(emptyMsg);
+                        }
+                    } else {
+                        // 处理错误响应
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'empty-message error';
+                        errorMsg.textContent = data.message || '获取标签失败';
+                        elements.userTagResults.appendChild(errorMsg);
+                    }
+                })
+                .catch(error => {
+                    elements.apiResponse.textContent = '错误: ' + error.message;
+                    elements.userTagResults.innerHTML = '<div class="empty-message error">获取标签失败</div>';
+                });
+            });
+            
+            // 按标签查找用户
+            elements.findUsersBtn.addEventListener('click', function() {
+                const tag = elements.searchTag.value.trim();
+                
+                if (!tag) {
+                    showStatus(elements.findUsersStatus, '请输入要搜索的标签', false);
+                    return;
+                }
+                
+                fetch(`${API_URL}/tags/${encodeURIComponent(tag)}/users`)
+                .then(handleApiError)
+                .then(data => {
+                    // 清空用户列表
+                    elements.usersByTagResults.innerHTML = '';
+                    
+                    // 检查是否有用户拥有该标签
+                    if (data.data && data.data.users && data.data.users.length > 0) {
+                        // 显示用户列表
+                        data.data.users.forEach(user => {
+                            const li = document.createElement('li');
+                            li.textContent = user;
+                            li.addEventListener('click', function() {
+                                // 点击用户时自动填入查询区域并触发查询
+                                elements.searchUserId.value = user;
+                                elements.getUserTagsBtn.click();
+                            });
+                            elements.usersByTagResults.appendChild(li);
+                        });
+                    } else {
+                        // 没有用户拥有该标签
+                        const emptyMsg = document.createElement('li');
+                        emptyMsg.className = 'empty-message';
+                        emptyMsg.textContent = '没有用户拥有此标签';
+                        elements.usersByTagResults.appendChild(emptyMsg);
+                    }
+                })
+                .catch(error => {
+                    showStatus(elements.findUsersStatus, '错误: ' + error.message, false);
+                    elements.usersByTagResults.innerHTML = '';
+                });
+            });
+            
+            // 删除用户标签
+            elements.removeTagBtn.addEventListener('click', function() {
+                const userId = elements.removeUserId.value.trim();
+                const tag = elements.removeTag.value.trim();
+                
+                if (!userId || !tag) {
+                    showStatus(elements.removeTagStatus, '请同时输入用户ID和标签', false);
+                    return;
+                }
+                
+                fetch(`${API_URL}/users/${userId}/tags/${encodeURIComponent(tag)}`, {
+                    method: 'DELETE'
+                })
+                .then(handleApiError)
+                .then(data => {
+                    showStatus(elements.removeTagStatus, data.message, true);
+                    elements.removeTag.value = '';
+                    
+                    // 如果当前正在查看该用户，则刷新标签显示
+                    if (elements.searchUserId.value === userId) {
+                        elements.getUserTagsBtn.click();
+                    }
+                })
+                .catch(error => {
+                    showStatus(elements.removeTagStatus, '错误: ' + error.message, false);
+                });
+            });
+            
+            // 获取所有用户
+            elements.getAllUsersBtn.addEventListener('click', function() {
+                fetch(`${API_URL}/users`)
+                .then(handleApiError)
+                .then(data => {
+                    // 清空用户列表
+                    elements.allUsersList.innerHTML = '';
+                    
+                    // 检查是否有用户
+                    if (data.data && data.data.users && data.data.users.length > 0) {
+                        // 显示用户列表
+                        data.data.users.forEach(user => {
+                            const li = document.createElement('li');
+                            li.textContent = user;
+                            li.addEventListener('click', function() {
+                                // 点击用户时自动填入查询区域并触发查询
+                                elements.searchUserId.value = user;
+                                elements.getUserTagsBtn.click();
+                            });
+                            elements.allUsersList.appendChild(li);
+                        });
+                    } else {
+                        // 系统中没有用户
+                        const emptyMsg = document.createElement('li');
+                        emptyMsg.className = 'empty-message';
+                        emptyMsg.textContent = '系统中没有用户';
+                        elements.allUsersList.appendChild(emptyMsg);
+                    }
+                })
+                .catch(error => {
+                    const errorMsg = document.createElement('li');
+                    errorMsg.className = 'empty-message error';
+                    errorMsg.textContent = '获取用户列表失败: ' + error.message;
+                    elements.allUsersList.innerHTML = '';
+                    elements.allUsersList.appendChild(errorMsg);
+                });
+            });
+            
+            // 获取所有标签
+            elements.getAllTagsBtn.addEventListener('click', function() {
+                fetch(`${API_URL}/tags`)
+                .then(handleApiError)
+                .then(data => {
+                    // 清空标签列表
+                    elements.allTagsList.innerHTML = '';
+                    
+                    // 检查是否有标签
+                    if (data.data && data.data.tags && data.data.tags.length > 0) {
+                        // 显示每个标签
+                        data.data.tags.forEach(tag => {
+                            const tagEl = document.createElement('div');
+                            tagEl.className = 'tag';
+                            tagEl.textContent = tag;
+                            tagEl.addEventListener('click', function() {
+                                // 点击标签时自动填入查询区域
+                                elements.searchTag.value = tag;
+                                elements.findUsersBtn.click();
+                            });
+                            elements.allTagsList.appendChild(tagEl);
+                        });
+                    } else {
+                        // 系统中没有标签
+                        const emptyMsg = document.createElement('div');
+                        emptyMsg.className = 'empty-message';
+                        emptyMsg.textContent = '系统中没有标签';
+                        elements.allTagsList.appendChild(emptyMsg);
+                    }
+                })
+                .catch(error => {
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'empty-message error';
+                    errorMsg.textContent = '获取标签列表失败: ' + error.message;
+                    elements.allTagsList.innerHTML = '';
+                    elements.allTagsList.appendChild(errorMsg);
+                });
+            });
+            
+            // 页面加载时自动获取所有用户列表
+            elements.getAllUsersBtn.click();
+        });
+    </script>
+</body>
+</html>
